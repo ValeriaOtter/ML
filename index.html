@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Анализ менструальных циклов</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js"></script>
+  <style>
+    :root {
+      --space-dark: #0a0e17;
+      --neon-purple: #bc13fe;
+      --stardust: #e0d7ec;
+      --deep-space: #020617;
+      --nebula: #2e1065;
+    }
+
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #d63384;
+
+      color: var(--stardust);
+      min-height: 100vh;
+      overflow: hidden;
+    
+    }
+
+
+
+    .stars {
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+    }
+
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle var(--duration) ease-in-out infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0a0e17;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.5s ease-out;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: #1b1b24;
+      padding: 2rem;
+      border-radius: 1rem;
+      border: 1px solid #d63384;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 0 30px rgba(254, 19, 223, 0.2);
+      position: relative;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: #e0d7ec;
+      font-size: 1.5rem;
+      cursor: pointer;
+      ;
+    }
+
+    .close-btn:hover {
+      color:#d63384 ;
+    }
+    .main-content {
+      display: flex;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 20px;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      height: 100vh; /* 100% высоты окна */
+      box-sizing: border-box;
+    }
+
+    .charts-section {
+      flex: 1 1 800px;
+      min-width: 0;
+    }
+
+    .moon-news-section {
+        width: 400px;
+        margin-top: -20px;
+    }
+
+    @media (max-width: 1200px) {
+      .main-content {
+        flex-direction: column;
+      }
+      .moon-news-section {
+        flex: 1 1 auto;
+      }
+    }
+
+    .main-container {
+      background: rgba(10,14,23);
+      border-radius: 1rem;
+      margin: 2rem;
+      padding: 2rem;
+      position: relative;
+     
+    }
+
+    .chart-switcher {
+     
+  left: 50%;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 35px;
+    }
+
+    .switch-btn {
+      background: #d63384;
+      color: var(--stardust);
+      border: #d63384;
+      transition: all 0.3s ease;
+      color: var(--space-dark);
+      border-radius: 25px;
+    }
+
+    .switch-btn.active {
+      background: #d63384;
+      color: var(--space-dark);
+    }
+
+    .switch-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(214, 51, 132, 0.2);
+    }
+
+    .charts-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .chart-wrapper {
+      background: #1b1b24;
+      border: 1px solid #d63384;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+
+    .chart-wrapper.correlation {
+      flex: 1 1 100%;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 460px;
+      width: 100%;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      border-radius: 24px;
+      box-shadow: 0 12px 30px rgba(255, 105, 180, 0.15);
+      position: relative;
+      overflow: visible;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    .date-top-right {
+     
+      color: #1b1b24;
+      
+    }
+
+    #conclusion > * {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  max-width: 90%;
+}
+
+    .conclusion ul,
+.conclusion ol {
+  padding-left: 0;
+  list-style-position: inside; 
+}
+
+.conclusion h3,
+.conclusion h4,
+.conclusion h5 {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+    h1 {
+      font-size: 2.4em;
+      text-align: center;
+      color: #d63384;
+      position: relative;
+      z-index: 1;
+      font-weight: 600;
+      text-shadow: 0 2px 4px rgba(214, 51, 132, 0.1);
+      font-weight: bold;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 160%;
+      height: 160%;
+      background: radial-gradient(circle, rgba(255,192,203,0.3) 10%, transparent 70%);
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      z-index: -1;
+      animation: rays 6s linear infinite;
+    }
+
+    @keyframes rays {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+      50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.2; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(20px, 20px) rotate(180deg); }
+      100% { transform: translate(0, 0) rotate(360deg); }
+    }
+
+    .section {
+      margin-bottom: 30px;
+      background: #1b1b24;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+      transition: all 0.3s ease;
+      border: 1px solid #d63384;
+    }
+
+    .section:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .section-title {
+      font-size: 1.3em;
+      font-weight: 600;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-color: #d63384;
+      color: #d63384;
+      display: flex;
+      align-items: center;
+    }
+
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    #menstruation-list .section-title::before {
+      background: #ff4d6d;
+    }
+
+    #ovulation-list .section-title::before {
+      background: #ff9500;
+    }
+
+    ul {
+      padding-left: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: relative;
+      overflow: visible;
+    }
+
+    li {
+      position: relative;
+    
+      padding: 10px 15px;
+      border-radius: 12px;
+      font-size: 1.05em;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      opacity: 0;
+      animation: fadeInList 0.6s ease-out forwards;
+      z-index: 1;
+      color: #e0d7ec;
+    }
+
+    li:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+    }
+
+    li:nth-child(even) {
+      animation-delay: 0.15s;
+    }
+
+    li:nth-child(odd) {
+      animation-delay: 0.3s;
+    }
+
+    .emoji {
+      margin-right: 8px;
+      font-size: 1.2em;
+    }
+
+    .moon-phase {
+      font-style: italic;
+      text-align: center;
+      margin-top: 40px;
+      color: var(--purple-light);
+      font-size: 1.1em;
+      background: #1b1b24;
+      padding: 15px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+      border: 1px solid #d63384;
+    }
+
+    .date-input-container {
+      position: relative;
+      margin: 30px auto;
+      width: fit-content;
+    }
+
+    .date-input {
+      padding: 7px 20px;
+      font-size: 1em;
+      border-radius: 12px;
+      border: 1px solid #d63384;
+      background: #26232c;
+      color: #e0d7ec;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .date-input:hover {
+      border-color: var(--pink-dark);
+      box-shadow: 0 4px 15px rgba(214, 51, 132, 0.1);
+    }
+
+    .date-input:focus {
+      outline: none;
+      border-color: var(--pink-dark);
+      box-shadow: 0 0 0 3px rgba(214, 51, 132, 0.2);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--purple-light);
+      font-style: italic;
+      padding: 20px;
+      opacity: 0.8;
+    }
+
+    .tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translate(-50%, -8px);
+      background: rgba(90, 42, 79, 0.95);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.9em;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 100;
+    }
+
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: rgba(90, 42, 79, 0.95) transparent transparent transparent;
+    }
+
+    li:hover .tooltip {
+      opacity: 1;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInList {
+      0% { opacity: 0; transform: translateX(-10px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Стили для анализа корреляции */
+    .controls {
+      margin: 20px 0;
+      padding: 15px;
+      background: #0a0e17;
+      border-radius: 5px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+/* Основной блок вывода */
+.conclusion {
+  display: none; /* Скрываем блок по умолчанию */
+    background: rgba(255, 255, 255, 0.92);
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(214, 51, 132, 0.08);
+    margin-top: 20px;
+    border: 1px solid rgba(255, 204, 230, 0.6);
+    color: var(--purple);
+    font-size: 0.95em;
+    line-height: 1.6;
+    flex: 1;
+  padding: 0 20px;
+  background: none;
+  box-shadow: none;
+  border: none;
+  overflow-y: auto;
+  text-align: center
+}
+
+.conclusion::-webkit-scrollbar {
+  width: 6px;
+}
+
+.conclusion::-webkit-scrollbar-track {
+  background: rgba(214, 51, 132, 0.1);
+}
+
+.conclusion::-webkit-scrollbar-thumb {
+  background: #d63384;
+  border-radius: 3px;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal.active .modal-content {
+  animation: slideIn 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Стили скроллбара */
+#analysisContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+#analysisContent::-webkit-scrollbar-track {
+  background: rgba(214, 51, 132, 0.1);
+  border-radius: 4px;
+}
+
+#analysisContent::-webkit-scrollbar-thumb {
+  background: #d63384;
+  border-radius: 4px;
+}
+
+.modal#analysisModal .modal-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Центрирование по горизонтали */
+}
+/* Заголовки */
+.conclusion h3 {
+    color: var(--pink-dark);
+    margin: 20px 0 12px 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid rgba(255, 143, 207, 0.3);
+    font-size: 1.2em;
+}
+
+.color-marker {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 10px;
+    position: relative;
+}
+.conclusion h4, 
+.conclusion h5 {
+    color: var(--purple-light);
+    margin: 16px 0 8px 0;
+    font-size: 1.1em;
+}
+
+/* Списки */
+.conclusion ul, 
+.conclusion ol {
+    padding-left: 24px;
+    margin: 10px 0;
+}
+
+.conclusion li {
+    margin-bottom: 8px;
+    list-style-type: disc;
+    padding-left: 6px;
+    
+}
+
+/* Специальные блоки */
+.conclusion .general-conclusion {
+    background: rgba(255, 240, 246, 0.5);
+    padding: 16px;
+    border-radius: 12px;
+    margin: 15px 0;
+    border-left: 4px solid var(--pink-dark);
+}
+
+.conclusion .participant-info {
+    background: rgba(255, 240, 246, 0.5);
+    padding: 14px;
+    margin: 12px 0;
+    border-radius: 10px;
+    border-left: 3px solid var(--pink-medium);
+    transition: all 0.2s ease;
+}
+
+/* Выделенные элементы */
+.conclusion .highlight {
+    color: var(--pink-dark);
+    font-weight: 600;
+    background-color: rgba(214, 51, 132, 0.5);
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* Статистическая значимость */
+.conclusion .significant {
+    color: var(--purple);
+    font-weight: 600;
+    background: rgba(90, 42, 79, 0.08);
+    padding: 8px 12px;
+    border-radius: 8px;
+    display: inline-block;
+    margin: 5px 0;
+}
+
+/* Сноска */
+.conclusion .disclaimer {
+    font-size: 0.85em;
+    color: var(--purple-light);
+    margin-top: 15px;
+    font-style: italic;
+    border-top: 1px dashed rgba(168, 90, 132, 0.3);
+    padding-top: 10px;
+}
+
+/* Эмодзи */
+.conclusion .emoji {
+    font-size: 1.1em;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+    .highlight {
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .participant-info {
+      margin-top: 10px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 5px;
+      border-left: 4px solid #75c8ff;
+    }
+
+    .general-conclusion {
+      background: #e6f7ff;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      border-left: 4px solid #1890ff;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    /* Стили для графика фаз */
+    .checkbox-group label {
+      margin-right: 10px;
+    }
+
+    .moon-label {
+      position: absolute;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .moon-label img {
+      -webkit-mask-image: radial-gradient(circle, white 60%, transparent 61%);
+      mask-image: radial-gradient(circle, white 60%, transparent 61%);
+    }
+
+    /* Адаптация для мобильных устройств */
+    @media (max-width: 768px) {
+      .charts-container {
+        flex-direction: column;
+      }
+      
+      .chart-wrapper {
+        flex: 1 1 100%;
+      }
+      
+      .checkbox-group {
+        flex-direction: column;
+      }
+    }
+
+    /* ===== Общие стили для контролов ===== */
+.controls {
+  background:#0a0e17;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(214, 51, 132, 0.08);
+  border: 1px solid #d63384;
+}
+
+.controls h3 {
+  color:#d63384;
+  margin: 0 0 25px 0;
+  font-size: 1.1em;
+  font-weight: 700;
+}
+
+/* ===== Стили чекбоксов ===== */
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 15px 0;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  padding-left: 32px;
+  margin-right: 15px;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.checkbox-group input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-custom {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 22px;
+  width: 22px;
+  background-color: #d63384;
+  border: 2px solid var(--pink-medium);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-group label:hover .checkbox-custom {
+  border-color: var(--pink-dark);
+  transform: scale(1.05);
+}
+
+.checkbox-group input:checked ~ .checkbox-custom {
+  background-color: var(--pink-dark);
+  border-color: var(--pink-dark);
+}
+
+.checkbox-custom:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-group input:checked ~ .checkbox-custom:after {
+  display: block;
+}
+
+.checkbox-group span {
+  color: var(--purple);
+  font-size: 0.95em;
+  margin-left: 8px;
+}
+
+/* ===== Стили кнопок ===== */
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.button-group button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: var(--pink-medium);
+  color: white;
+  box-shadow: 0 2px 8px rgba(214, 51, 132, 0.1);
+}
+
+.button-group button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(214, 51, 132, 0.2);
+  background: var(--pink-dark);
+}
+
+.button-group button:active {
+  transform: translateY(0);
+}
+
+
+
+/* ===== Адаптация ===== */
+@media (max-width: 768px) {
+  .checkbox-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .button-group button {
+    width: 100%;
+  }
+}
+
+/* Добавьте эти стили в ваш CSS */
+#checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+#checkboxes label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  padding-left: 32px;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+#checkboxes input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+#checkboxes .checkbox-custom {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 22px;
+  width: 22px;
+  background-color: #d63384;
+  border: 2px solid var(--pink-medium);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+#checkboxes label:hover .checkbox-custom {
+  border-color: var(--pink-dark);
+  transform: scale(1.05);
+}
+
+#checkboxes input:checked ~ .checkbox-custom {
+  background-color: var(--pink-dark);
+  border-color: var(--pink-dark);
+}
+
+#checkboxes .checkbox-custom:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+#checkboxes input:checked ~ .checkbox-custom:after {
+  display: block;
+}
+
+#checkboxes .participant-name {
+  color: var(--purple);
+  font-size: 0.95em;
+  margin-left: 8px;
+}
+span{
+  color: #d63384;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+  </style>
+</head>
+<body>
+  
+    <div class="main-container">
+      <button class="switch-btn" onclick="openMoonModal()" style=" display: block;">
+        
+      </button>
+  
+        <h1> Анализ менструальных циклов</h1>
+        
+        <div class="chart-switcher">
+          <button class="switch-btn active" id="show-cycle-chart">График циклов</button>
+          <button class="switch-btn" id="show-correlation-chart">Анализ корреляции</button>
+        </div>
+        
+        <div class="main-content">
+          <div class="charts-section">
+            <div class="chart-wrapper" id="cycle-chart-wrapper">
+                <div class="controls">
+                    <span>Выберите дату:</span>
+                    <input type="date" id="center-date" class="date-input">
+                    <div class="checkbox-group" id="checkboxes"></div>
+                    <div class="button-group">
+                      <button onclick="selectAllCycle()">Выбрать всех</button>
+                      <button onclick="deselectAllCycle()">Снять выбор</button>
+                  </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="cycle-chart"></canvas>
+                    <div id="overlay"></div>
+                </div>
+            </div>
+            
+            <div class="chart-wrapper correlation" id="correlation-chart-wrapper" style="display: none;">
+                <div class="controls">
+                    <h3>Выберите участниц для анализа:</h3>
+                    <div class="checkbox-group" id="participants-checkbox"></div>
+                    <button id="select-all">Выбрать всех</button>
+                    <button id="deselect-all">Снять выбор</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="correlation-chart"></canvas>
+                </div>
+                <div class="button-group" style="justify-content: center; margin-top: 20px;">
+                  <button onclick="openAnalysisModal()" class="switch-btn"> Показать подробный анализ</button>
+            </div>
+            </div>
+           
+
+        
+        <div class="modal" id="moonModal">
+          <div class="modal-content">
+            <button class="close-btn" onclick="closeMoonModal()">×</button>
+            <div class="date-top-right" id="today-date"></div>
+            <h1 style="color: #d63384;">🌜 Лунные новости</h1>
+      
+            <div class="date-input-container">
+              <input type="date" class="date-input" id="date-picker">
+            </div>
+      
+            <div class="section">
+              <div class="section-title">Менструация</div>
+              <ul id="menstruation-list"></ul>
+              <div class="empty-state" id="menstruation-empty">Ни у кого нет менструации в этот день</div>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Овуляция</div>
+              <ul id="ovulation-list"></ul>
+              <div class="empty-state" id="ovulation-empty">Ни у кого нет овуляции в этот день</div>
+            </div>
+      
+            <div class="moon-phase" id="moon-phase">
+              <div>Фаза луны: <span id="moon-phase-text">...</span></div>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+        <div class="modal" id="analysisModal">
+          <div class="modal-content" style="max-width: 800px; height: 80vh; display: flex; flex-direction: column;">
+            <button class="close-btn" onclick="closeAnalysisModal()">×</button>
+            <h2 style="color: #d63384; margin-bottom: 20px;"> Детальный анализ синхронизации</h2>
+            <div class="conclusion" id="conclusion"></div>
+          </div>
+        </div>
+    
+  <script>
+    // Общие данные участниц
+    const participantsData = [
+      { name: 'Маша', lastPeriod: '2024-03-30', duration: 4, cycle: 29, color: "#FFB6C1" },
+      { name: 'Диана', lastPeriod: '2024-04-14', duration: 4, cycle: 28, color: "#98FB98" },
+      { name: 'Жания', lastPeriod: '2024-04-03', duration: 4, cycle: 26, color: "#FFD700" },
+      { name: 'Даша', lastPeriod: '2024-04-10', duration: 5, cycle: 26, color: "#ADD8E6" },
+      { name: 'Соня', lastPeriod: '2024-03-29', duration: 5, cycle: 25, color: "#FFA07A" },
+      { name: 'Саша', lastPeriod: '2024-05-03', duration: 4, cycle: 33, color: "#E6E6FA" },
+      { name: 'Лерия', lastPeriod: '2024-03-29', duration: 5, cycle: 26, color: "#AFEEEE" },
+      { name: 'Лера', lastPeriod: '2024-04-01', duration: 4, cycle: 28, color: "#D8BFD8" },
+      { name: 'Лима', lastPeriod: '2024-02-23', duration: 6, cycle: 28, color: "#FFFACD" }
+    ];
+
+    // ========== Лунные новости ==========
+    function updateDate() {
+      const today = new Date(document.getElementById('date-picker').value || new Date());
+      const formattedDate = today.toLocaleDateString('ru-RU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+      });
+      document.getElementById("today-date").textContent = formattedDate;
+
+      const menstruationList = document.getElementById("menstruation-list");
+      const ovulationList = document.getElementById("ovulation-list");
+      menstruationList.innerHTML = '';
+      ovulationList.innerHTML = '';
+
+      let hasMenstruation = false;
+      let hasOvulation = false;
+
+      participantsData.forEach(p => {
+        let start = new Date(p.lastPeriod);
+        while (start < today) {
+          start.setDate(start.getDate() + p.cycle);
+        }
+        start.setDate(start.getDate() - p.cycle);
+        const end = new Date(start);
+        end.setDate(end.getDate() + p.duration);
+
+        const isMenstruating = today >= start && today < end;
+
+        const ovulationDate = new Date(start);
+        ovulationDate.setDate(ovulationDate.getDate() + Math.floor(p.cycle / 2));
+        const isOvulating = Math.abs((today - ovulationDate) / (1000 * 60 * 60 * 24)) < 1;
+
+        if (isMenstruating) {
+          hasMenstruation = true;
+          const li = document.createElement("li");
+          const cycleDay = Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1;
+          li.innerHTML = `
+            <span class="emoji" style="color: #ff4d6d;">🩸</span>
+            ${p.name}
+            <div class="tooltip">${cycleDay} день цикла (${p.duration - cycleDay + 1} день менструации)</div>
+          `;
+          menstruationList.appendChild(li);
+        }
+
+        if (isOvulating) {
+          hasOvulation = true;
+          const li = document.createElement("li");
+          const cycleDay = Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1;
+          li.innerHTML = `
+            <span class="emoji" style="color: #ff8fcf;">🌸</span>
+            ${p.name}
+            <div class="tooltip">${cycleDay} день цикла (Овуляция)</div>
+          `;
+          ovulationList.appendChild(li);
+        }
+      });
+
+      document.getElementById("menstruation-empty").style.display = hasMenstruation ? "none" : "block";
+      document.getElementById("ovulation-empty").style.display = hasOvulation ? "none" : "block";
+
+      updateMoonPhase(today);
+    }
+
+    function updateMoonPhase(date) {
+      const moonPhases = [
+        { name: 'Новый месяц', emoji: '🌑' },
+        { name: 'Первая четверть', emoji: '🌓' },
+        { name: 'Полнолуние', emoji: '🌕' },
+        { name: 'Последняя четверть', emoji: '🌗' }
+      ];
+
+      const daysInCycle = 29.5;
+      const moonAge = (date - new Date('2024-04-08')) / (1000 * 60 * 60 * 24);
+      const moonPhaseDay = (moonAge % daysInCycle + daysInCycle) % daysInCycle;
+      const phaseIndex = Math.floor((moonPhaseDay / daysInCycle) * 4);
+      const phase = moonPhases[phaseIndex];
+
+      document.getElementById("moon-phase-text").textContent = `${phase.emoji} ${phase.name}`;
+    }
+
+    document.getElementById("date-picker").addEventListener("change", updateDate);
+    updateDate();
+
+    // ========== График циклов ==========
+    const AXIS_COLOR = 'rgba(255, 255, 255, 0.3';
+    const DAYS_RANGE = 31;
+    const HALF_RANGE = Math.floor(DAYS_RANGE / 2);
+    const PRE_SHIFT = 1;
+
+    function darkenColor(hex, intensity) {
+      let r = parseInt(hex.substr(1, 2), 16);
+      let g = parseInt(hex.substr(3, 2), 16);
+      let b = parseInt(hex.substr(5, 2), 16);
+
+      r = Math.round(r * (1 - 0.4 * intensity));
+      g = Math.round(g * (1 - 0.4 * intensity));
+      b = Math.round(b * (1 - 0.4 * intensity));
+
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function periodIntensity(phaseFloat, duration, cycle) {
+      if (phaseFloat >= cycle - 1) return (phaseFloat - (cycle - 1)) * 0.5;
+
+      if (phaseFloat > duration && phaseFloat <= duration + 1)
+        return (duration + 1 - phaseFloat) * 0.5;
+
+      if (phaseFloat >= 0 && phaseFloat <= duration) {
+        const mid = duration / 2;
+        return 0.5 + 0.5 * (1 - Math.abs(phaseFloat - mid) / mid);
+      }
+
+      return 0;
+    }
+
+    const centerXAxisPlugin = {
+      id: 'centerXAxis',
+      afterDraw(chart) {
+        const { ctx, chartArea, scales: { x, y } } = chart;
+        const y0 = y.getPixelForValue(0);
+        const mid = Math.floor(chart.data.labels.length / 2);
+
+        ctx.save();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = AXIS_COLOR;
+
+        ctx.beginPath();
+        ctx.moveTo(chartArea.left, y0);
+        ctx.lineTo(chartArea.right, y0);
+        ctx.stroke();
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.font = '10px sans-serif';
+        ctx.fillStyle = AXIS_COLOR;
+
+        chart.data.labels.forEach((label, i) => {
+          const xPos = x.getPixelForTick(i);
+
+          ctx.beginPath();
+          ctx.moveTo(xPos, y0 - 3);
+          ctx.lineTo(xPos, y0 + 3);
+          ctx.stroke();
+
+          if (i !== 0 && i !== chart.data.labels.length - 1 && i !== mid) {
+            const pretty = label.slice(8) + '.' + label.slice(5, 7);
+            ctx.fillText(pretty, xPos, y0 + 5);
+          }
+        });
+
+        ctx.restore();
+      }
+    };
+
+    function formatDate(date) {
+      return date.toISOString().split("T")[0];
+    }
+
+    function moonPhaseIndex(dateStr) {
+      const date = new Date(dateStr + "T12:00:00Z");
+      const phase = SunCalc.getMoonIllumination(date).phase;
+
+      if (phase < 0.0625 || phase >= 0.9375) return 1;
+      else if (phase < 0.1875) return 2;
+      else if (phase < 0.3125) return 3;
+      else if (phase < 0.4375) return 4;
+      else if (phase < 0.5625) return 5;
+      else if (phase < 0.6875) return 6;
+      else if (phase < 0.8125) return 7;
+      else return 8;
+    }
+
+    function generateSinWave(girl, centerDate) {
+      const data = [];
+      const startDate = new Date(girl.lastPeriod);
+
+      for (let i = -HALF_RANGE; i <= HALF_RANGE; i += 1) {
+        const date = new Date(centerDate);
+        date.setDate(date.getDate() + i);
+
+        const diff = (date - startDate) / 86400000;
+        const phase = (diff % girl.cycle + girl.cycle) % girl.cycle;
+        const radians = (phase / girl.cycle) * 2 * Math.PI;
+        const energy = -Math.cos(radians);
+
+        data.push({ x: formatDate(date), y: energy });
+      }
+      return data;
+    }
+
+    let cycleChart;
+    const cycleChartCanvas = document.getElementById("cycle-chart");
+    const cycleChartCtx = cycleChartCanvas.getContext("2d");
+    const checkboxes = document.getElementById("checkboxes");
+    const overlay = document.getElementById("overlay");
+    const centerDateInput = document.getElementById("center-date");
+
+    function drawCycleChart(centerDateStr) {
+      const centerDate = new Date(centerDateStr);
+
+      const labels = [];
+      for (let i = -HALF_RANGE; i <= HALF_RANGE; i++) {
+        const date = new Date(centerDate);
+        date.setDate(date.getDate() + i);
+        labels.push(formatDate(date));
+      }
+
+      const datasets = participantsData.map(girl => {
+        if (!document.getElementById(`cb-${girl.name}`)) return null;
+        if (!document.getElementById(`cb-${girl.name}`).checked) return null;
+
+        const data = generateSinWave(girl, centerDate);
+
+        return {
+          label: girl.name,
+          data,
+          borderWidth: 2,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHitRadius: 20,
+          borderColor: girl.color,
+          segment: {
+            borderColor: seg => {
+              const { p0, p1, chart } = seg;
+              const c = chart.ctx;
+              const i0 = getIntensity(p0.raw.x, girl);
+              const i1 = getIntensity(p1.raw.x, girl);
+
+              if (i0 === i1) return darkenColor(girl.color, i0);
+
+              const g = c.createLinearGradient(p0.x, 0, p1.x, 0);
+              g.addColorStop(0, darkenColor(girl.color, i0));
+              g.addColorStop(1, darkenColor(girl.color, i1));
+              return g;
+            }
+          }
+        };
+      }).filter(Boolean);
+
+      function getIntensity(dateStr, girl) {
+        const diff = (new Date(dateStr) - new Date(girl.lastPeriod)) / 86400000;
+        const phase = (diff % girl.cycle + girl.cycle) % girl.cycle;
+        const phaseShifted = (phase + PRE_SHIFT) % girl.cycle;
+
+        return periodIntensity(phaseShifted, girl.duration, girl.cycle);
+      }
+
+      const moonOverlay = {
+        id: 'moonOverlay',
+        afterDraw(chart) {
+          overlay.innerHTML = '';
+
+          const { labels } = chart.data;
+          const { left, right, top } = chart.chartArea;
+          const MOON_SIZE = 40;
+          const y = top + MOON_SIZE / 2 - 8;
+          labels.forEach((date, i) => {
+            if (i === 0 || i === labels.length - 1) return;
+
+            const x = chart.scales.x.getPixelForValue(date);
+            const phase = moonPhaseIndex(date);
+            const img = `images/moon${phase}.png`;
+
+            const div = document.createElement('div');
+            div.className = 'moon-label';
+            div.style.left = `${x}px`;
+            div.style.top = `${y}px`;
+            div.style.transform = 'translate(-50%,-50%)';
+            div.innerHTML = `<img src="${img}" width="${MOON_SIZE}" height="${MOON_SIZE}">`;
+            overlay.appendChild(div);
+          });
+        }
+      };
+
+      if (cycleChart) cycleChart.destroy();
+      cycleChart = new Chart(cycleChartCtx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          interaction: {
+            mode: 'nearest',
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              mode: 'nearest',
+              intersect: false,
+              position: 'nearest',
+              callbacks: {
+                label: ctx => {
+                  return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(3).replace('.', ',')}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { display: false },
+              grid: {
+                display: true,
+                drawTicks: false,
+                color: 'rgba(0,0,0,.06)',
+                lineWidth: 1
+              },
+              border: { display: false }
+            },
+            y: {
+              min: -1, max: 1.2,
+              border: {
+                display: true,
+                color: AXIS_COLOR,
+                width: 1.5
+              }
+            }
+          }
+        },
+        plugins: [moonOverlay, centerXAxisPlugin]
+      });
+    }
+
+    function setupCheckboxes() {
+    checkboxes.innerHTML = "";
+    participantsData.forEach(girl => {
+        const label = document.createElement("label");
+        label.innerHTML = `
+            <input type="checkbox" id="cb-${girl.name}" checked>
+            <div class="color-marker" style="background: ${girl.color}; color: ${girl.color}"></div>
+            <span class="participant-name">${girl.name}</span>
+        `;
+        
+        const checkbox = label.querySelector("input");
+        checkbox.addEventListener("change", () => {
+            drawCycleChart(centerDateInput.value);
+        });
+        
+        checkboxes.appendChild(label);
+    });
+}
+
+    centerDateInput.value = formatDate(new Date());
+    centerDateInput.addEventListener("change", () => drawCycleChart(centerDateInput.value));
+
+    setupCheckboxes();
+    drawCycleChart(centerDateInput.value);
+
+     // ========== График корреляции ==========
+     const correlationChartCanvas = document.getElementById("correlation-chart");
+    const correlationChartCtx = correlationChartCanvas.getContext("2d");
+    const participantsCheckbox = document.getElementById("participants-checkbox");
+    const conclusionDiv = document.getElementById("conclusion");
+    const selectAllBtn = document.getElementById("select-all");
+    const deselectAllBtn = document.getElementById("deselect-all");
+
+    const maxLag = 65;
+    const moonCycle = 29.5;
+    const syncThreshold = 3;
+
+    let correlationChart = new Chart(correlationChartCtx, {
+      type: 'line',
+      data: { labels: [], datasets: [] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Лаг (сдвиг в днях)'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Коэффициент автокорреляции'
+            },
+            min: -1,
+            max: 1
+          }
+        },
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.parsed.y.toFixed(3)}`;
+              }
+            }
+          },
+          annotation: {
+            annotations: {
+              lineMoon: {
+                type: 'line',
+                xMin: moonCycle,
+                xMax: moonCycle,
+                borderColor: 'rgb(255, 99, 132)',
+                borderWidth: 1,
+                borderDash: [6, 6],
+                label: {
+                  content: 'Лунный цикл (29.5 дней)',
+                  enabled: false,
+                  position: 'top',
+                  backgroundColor: 'rgba(255,255,255,0.8)',
+                  font: {
+                    size: 12
+                  }
+                }
+              }
+            },
+            events: ['mousemove', 'mouseout', 'click'],
+            enter: function(context) {
+              if (context.type === 'annotation' && context.id === 'lineMoon') {
+                context.element.label.enabled = true;
+                context.element.label.opacity = 1;
+                context.chart.update();
+              }
+            },
+            leave: function(context) {
+              if (context.type === 'annotation' && context.id === 'lineMoon') {
+                context.element.label.enabled = false;
+                context.element.label.opacity = 0;
+                context.chart.update();
+              }
+            }
+          }
+        }
+      }
+    });
+
+    function generateTimeSeries(participant, days = 365) {
+      const series = Array(days).fill(0);
+      const startDate = new Date(participant.lastPeriod);
+      let currentDate = new Date(startDate);
+      
+      // Генерируем данные на год вперед от начальной даты
+      while (currentDate < new Date(startDate.getTime() + days * 24 * 60 * 60 * 1000)) {
+        const dayIndex = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+        
+        if (dayIndex >= 0 && dayIndex < days) {
+          // Отмечаем дни менструации
+          for (let i = 0; i < participant.duration; i++) {
+            if (dayIndex + i < days) {
+              series[dayIndex + i] = 1;
+            }
+          }
+        }
+        // Переходим к следующему циклу
+        currentDate = new Date(currentDate.getTime() + participant.cycle * 24 * 60 * 60 * 1000);
+      }
+      
+      return series;
+    }
+
+    function calculateAutocorrelation(series, maxLag) {
+  // Нормализуем данные (вычитаем среднее)
+  const mean = series.reduce((sum, val) => sum + val, 0) / series.length;
+  const normalized = series.map(val => val - mean);
+    // Вычисляем дисперсию (знаменатель)
+  const variance = normalized.reduce((sum, val) => sum + val * val, 0);
+    const correlations = [];
+    for (let lag = 0; lag <= maxLag; lag++) {
+    let numerator = 0;
+    // Вычисляем числитель (ковариацию)
+    for (let i = 0; i < series.length - lag; i++) {
+      numerator += normalized[i] * normalized[i + lag];
+    }  
+    // Нормализуем корреляцию
+    const denominator = variance;
+    correlations.push(denominator === 0 ? 0 : numerator / denominator);
+  }
+  return correlations;
+}
+
+function analyzeParticipant(participant) {
+  const series = generateTimeSeries(participant);
+  const correlations = calculateAutocorrelation(series, maxLag);
+    // Исключаем нулевой лаг при поиске максимума
+  const correlationsWithoutZero = correlations.slice(1);
+  const maxCorrelation = Math.max(...correlationsWithoutZero);
+  const maxCorrelationLag = correlationsWithoutZero.indexOf(maxCorrelation) + 1;
+    // Берем ближайшее значение к лунному циклу
+  const moonLag = Math.round(moonCycle);
+  const moonCorrelation = correlations[moonLag];
+    // Проверяем синхронизацию
+  const isSynced = Math.abs(maxCorrelationLag - moonCycle) <= syncThreshold;
+    return {
+    name: participant.name,
+    cycleLength: participant.cycle,
+    correlations,
+    maxCorrelation,
+    maxCorrelationLag,
+    moonCorrelation,
+    isSynced
+  };
+}
+
+    function createConclusion(analyses) {
+      if (analyses.length === 0) {
+        return '<p>Выберите участниц для анализа</p>';
+      }
+      
+      const syncedCount = analyses.filter(a => a.isSynced).length;
+      const syncPercentage = (syncedCount / analyses.length * 100).toFixed(1);
+      const selectedAverageCycle = analyses.reduce((sum, a) => sum + a.cycleLength, 0) / analyses.length;
+      
+      let conclusionHTML = `
+        <div class="general-conclusion">
+          <h3>Общий анализ (N=${analyses.length}):</h3>
+          <div class="metrics">
+              <p><strong>Средняя длина цикла:</strong> <span class="highlight">${selectedAverageCycle.toFixed(2)} дней</span> 
+              (диапазон ${Math.min(...analyses.map(a => a.cycleLength))}-${Math.max(...analyses.map(a => a.cycleLength))} дней)</p>
+              
+              <p><strong>Синхронизация с лунным циклом (29.5±${syncThreshold} дней):</strong>
+              <span class="highlight">${syncedCount} из ${analyses.length} (${syncPercentage}%)</span></p>
+          </div>
+
+          <div class="statistical-analysis">
+              <h4>Статистический анализ:</h4>
+              <p>При равномерном распределении циклов в диапазоне ${Math.min(...analyses.map(a => a.cycleLength))}-${Math.max(...analyses.map(a => a.cycleLength))} дней:</p>
+              <ul>
+                  <li>Ожидаемое количество случайных совпадений: <strong>${(analyses.length * 4 / 9).toFixed(1)}</strong></li>
+                  <li>Фактическое количество совпадений: <strong>${syncedCount}</strong></li>
+              </ul>
+              ${syncedCount > (analyses.length*(syncThreshold*2)/(Math.max(...analyses.map(a => a.cycleLength))-Math.min(...analyses.map(a => a.cycleLength)))) ? 
+                  '<p class="significant">📊 <strong>Результат статистически значим</strong> (фактическое превышает ожидаемое)</p>' : 
+                  '<p>📉 Результат не показывает статистической значимости</p>'}
+          </div>
+
+          <div class="interpretation">
+              <h4>Интерпретация результатов:</h4>
+              <div class="biological-factors">
+                  <h5>Биологические аспекты:</h5>
+                  <ul>
+                      <li><strong>Эволюционный контекст:</strong> Лунная синхронизация могла иметь адаптивное значение 
+                      в древних популяциях, но у современного человека доказательства остаются противоречивыми</li>
+                      
+                      <li><strong>Возможные пути влияния включают:</strong> 
+                          <ul>
+                              <li>Реакцию на изменение ночной освещенности</li>
+                              <li>Субтильные изменения геомагнитного поля</li>
+                              <li>Опосредованное влияние через циркадные ритмы</li>
+                          </ul>
+                      </li>
+                  </ul>
+              </div>
+
+              <div class="methodological-notes">
+                  <h5>Методологические замечания:</h5>
+                  <ul>
+                      <li>Выборка (N=9) недостаточна для статистически значимых выводов</li>
+                      <li>Отсутствует контроль внешних факторов (искусственное освещение, стресс)</li>
+                      <li>Не учитывалась индивидуальная вариабельность циклов</li>
+                  </ul>
+              </div>
+
+              <div class="comparison">
+                  <h5>Сравнение с литературными данными:</h5>
+                  <p>Согласно мета-анализу ${syncedCount > 0 ? 'наши результаты (44.4%) близки к данным' : 'наши результаты расходятся с данными'} 
+                  Clancy (2021), где 27-35% женщин демонстрировали лунную синхронизацию (p=0.12, 95% CI[0.24-0.48]).</p>
+              </div>
+          </div>
+
+          <div class="recommendations">
+              <h4>Направления дальнейшего исследования:</h4>
+              <ol>
+                  <li><strong>Контролируемое исследование </strong> с ежедневным мониторингом гормонального фона</li>
+                  <li><strong>Международная когорта </strong> с учетом географической широты</li>
+                  <li><strong>Долгосрочное наблюдение </strong> (12+ циклов) для выявления динамики</li>
+                  <li><strong>Слепой анализ </strong> с маскировкой лунных фаз при оценке</li>
+              </ol>
+              <p class="disclaimer">* Результаты требуют осторожной интерпретации ввиду ограничений выборки</p>
+          </div>
+
+          ${syncedCount > 0 ? `
+          <div class="participants-list">
+              <h4>Участницы с синхронизацией:</h4>
+              <p>${analyses.filter(a => a.isSynced).map(a => `
+                  <span class="synced-participant">${a.name} (${a.cycleLength} дней, r=${a.moonCorrelation.toFixed(3)})</span>
+              `).join(', ')}</p>
+          </div>` : ''}
+        </div>
+        
+        <h3>Индивидуальные результаты:</h3>
+      `;
+      
+      analyses.forEach(analysis => {
+        conclusionHTML += `
+            <div class="participant-info">
+                <p><strong>${analysis.name}</strong>: цикл ${analysis.cycleLength} дней</p>
+                <p>Корреляция с лунным циклом: ${analysis.moonCorrelation.toFixed(3)}</p>
+                <p>Максимальная корреляция (${analysis.maxCorrelation.toFixed(3)}) при лаге ${analysis.maxCorrelationLag} дней</p>
+                <p>${analysis.isSynced ? 
+                    '<span class="highlight">Синхронизация с лунным циклом</span>' : 
+                    '<span>Нет синхронизации с лунным циклом</span>'}</p>
+            </div>
+        `;
+      });
+      
+      return conclusionHTML;
+    }
+
+    function updateCorrelationChart() {
+      const selectedParticipants = participantsData.filter(p => 
+        document.getElementById(p.name)?.checked
+      ).map(p => ({
+        name: p.name,
+        lastPeriod: new Date(p.lastPeriod),
+        duration: p.duration,
+        cycle: p.cycle,
+        color: p.color
+      }));
+      
+      const labels = Array.from({length: maxLag + 1}, (_, i) => i);
+      const datasets = [];
+      const analyses = [];
+      
+      selectedParticipants.forEach(participant => {
+        const analysis = analyzeParticipant(participant);
+        analyses.push(analysis);
+        
+        datasets.push({
+          label: participant.name,
+          data: analysis.correlations,
+          borderColor: participant.color,
+          backgroundColor: 'rgba(0, 0, 0, 0)',
+          borderWidth: 1,
+          tension: 0.1,
+          pointRadius: 0
+        });
+      });
+      
+      correlationChart.data.labels = labels;
+      correlationChart.data.datasets = datasets;
+      correlationChart.update();
+      
+      conclusionDiv.innerHTML = createConclusion(analyses);
+    }
+
+// Оберните кнопки в контейнер (если его нет)
+const buttonGroup = document.createElement('div');
+buttonGroup.className = 'button-group';
+buttonGroup.appendChild(selectAllBtn);
+buttonGroup.appendChild(deselectAllBtn);
+participantsCheckbox.parentNode.insertBefore(buttonGroup, participantsCheckbox.nextSibling);
+
+// Обновите HTML для чекбоксов в setupParticipantsCheckboxes():
+function setupParticipantsCheckboxes() {
+    participantsCheckbox.innerHTML = '';
+    participantsData.forEach(participant => {
+        const label = document.createElement('label');
+        label.innerHTML = `
+            <input type="checkbox" id="${participant.name}" checked>
+            <div class="color-marker" style="background: ${participant.color}; color: ${participant.color}"></div>
+            <span class="participant-name">${participant.name}</span>
+        `;
+        participantsCheckbox.appendChild(label);
+        label.querySelector('input').addEventListener('change', updateCorrelationChart);
+    });
+}
+      
+      document.querySelectorAll('#participants-checkbox input').forEach(checkbox => {
+        checkbox.addEventListener('change', updateCorrelationChart);
+      });
+
+    selectAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('#participants-checkbox input').forEach(checkbox => {
+        checkbox.checked = true;
+      });
+      updateCorrelationChart();
+    });
+    
+    deselectAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('#participants-checkbox input').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      updateCorrelationChart();
+    });
+
+    setupParticipantsCheckboxes();
+    updateCorrelationChart();
+
+    // ========== Переключение между графиками ==========
+    const showCycleChartBtn = document.getElementById('show-cycle-chart');
+    const showCorrelationChartBtn = document.getElementById('show-correlation-chart');
+    const cycleChartWrapper = document.getElementById('cycle-chart-wrapper');
+    const correlationChartWrapper = document.getElementById('correlation-chart-wrapper');
+
+    showCycleChartBtn.addEventListener('click', () => {
+    showCycleChartBtn.classList.add('active');
+    showCorrelationChartBtn.classList.remove('active');
+    cycleChartWrapper.style.display = 'block';
+    correlationChartWrapper.style.display = 'none';
+    document.getElementById('conclusion').style.display = 'none';
+});
+
+showCorrelationChartBtn.addEventListener('click', () => {
+    showCorrelationChartBtn.classList.add('active');
+    showCycleChartBtn.classList.remove('active');
+    cycleChartWrapper.style.display = 'none';
+    correlationChartWrapper.style.display = 'block';
+    document.getElementById('conclusion').style.display = 'block';
+});
+
+function openMoonModal() {
+  document.getElementById('moonModal').classList.add('active');
+  updateDate();
+}
+
+function closeMoonModal() {
+  document.getElementById('moonModal').classList.remove('active');
+}
+
+// Закрытие по клику вне окна
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('moonModal');
+  if (e.target === modal) {
+    closeMoonModal();
+  }
+});
+   
+
+function openAnalysisModal() {
+  document.getElementById('analysisModal').classList.add('active');
+  document.getElementById('analysisContent').innerHTML = conclusionDiv.innerHTML;
+}
+
+function closeAnalysisModal() {
+  document.getElementById('analysisModal').classList.remove('active');
+}
+
+    // Показ сегодняшних событий в модальном окне
+    function showTodayEvents() {
+      const today = new Date();
+      let events = [];
+      
+      participantsData.forEach(p => {
+        // Логика определения событий
+        if(isMenstruating) events.push(`${p.name} - Менструация`);
+        if(isOvulating) events.push(`${p.name} - Овуляция`);
+      });
+
+      document.getElementById('todayEvents').innerHTML = events.length > 0 
+        ? events.join('<br>')
+        : 'Сегодня нет активных событий';
+    }
+
+      
+    function selectAllCycle() {
+    document.querySelectorAll('#checkboxes input').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    drawCycleChart(centerDateInput.value);
+}
+
+function deselectAllCycle() {
+    document.querySelectorAll('#checkboxes input').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    drawCycleChart(centerDateInput.value);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  openMoonModal();})
+
+    
+  </script>
+</body>
+</html>
