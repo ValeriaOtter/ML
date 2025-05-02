@@ -854,6 +854,8 @@
   width: 0;
 }
 
+
+
 #checkboxes .checkbox-custom {
   position: absolute;
   top: 0;
@@ -864,6 +866,7 @@
   border: 2px solid var(--pink-medium);
   border-radius: 6px;
   transition: all 0.2s ease;
+  
 }
 
 #checkboxes label:hover .checkbox-custom {
@@ -903,14 +906,33 @@ span{
   font-size: 1.2rem;
   font-weight: bold;
 }
+
+.blood-drop-btn {
+  position: absolute;
+  top: 45px;
+left: 20px;
+  background: none;
+  border: none;
+  font-size: 2.5rem; 
+  cursor: pointer;
+  padding: 10px;
+  transition: transform 0.3s ease;
+  z-index: 1000;
+}
+
+.blood-drop-btn:hover {
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 8px rgba(214, 51, 132, 0.5));
+}
+
+
+button#switch-btn { display: block; }
   </style>
 </head>
 <body>
   
     <div class="main-container">
-      <button id="switch-btn" onclick="openMoonModal()" style=" display: block;">
-        🩸
-      </button>
+      <button id="switch-btn" onclick="openMoonModal()" class="blood-drop-btn">🩸</button>
   
         <h1> Анализ менструальных циклов</h1>
         
