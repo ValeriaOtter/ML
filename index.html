@@ -129,11 +129,10 @@
 
     .main-container {
       background: rgba(10,14,23);
-      border-radius: 1rem;
-      margin: 2rem;
+    
       padding: 2rem;
       position: relative;
-     
+      background: var(--space-dark);
     }
 
     .chart-switcher {
@@ -909,8 +908,8 @@ span{
 <body>
   
     <div class="main-container">
-      <button class="switch-btn" onclick="openMoonModal()" style=" display: block;">
-        
+      <button id="switch-btn" onclick="openMoonModal()" style=" display: block;">
+        🩸
       </button>
   
         <h1> Анализ менструальных циклов</h1>
@@ -1775,9 +1774,20 @@ function deselectAllCycle() {
     });
     drawCycleChart(centerDateInput.value);
 }
-document.addEventListener('DOMContentLoaded', () => {
-  openMoonModal();})
 
+function syncDates(date) {
+  const dateStr = formatDate(date);
+  centerDateInput.value = dateStr;
+  document.getElementById('date-picker').value = dateStr;
+  drawCycleChart(dateStr);
+  updateDate();
+}
+
+document.querySelectorAll('input[type="date"]').forEach(input => {
+  input.addEventListener('change', e => {
+    syncDates(new Date(e.target.value));
+  });
+});
     
   </script>
 </body>
